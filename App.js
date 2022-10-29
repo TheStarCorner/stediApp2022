@@ -1,10 +1,12 @@
 import React, { useEffect, useState, } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, AsyncStorage,TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, AsyncStorage,TextInput, Button, Alert} from 'react-native';
 import  Navigation from './components/Navigation';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingScreen from './screens/OnboardingScreen';
 import Home from './screens/Home';
 import { NavigationContainer } from '@react-navigation/native';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
+
 
 
 
@@ -13,9 +15,10 @@ const AppStack = createNativeStackNavigator();
 
 const App = () =>{
   const [isFirstLaunch, setFirstLaunch] = React.useState(true);
+  const [phoneNumber, setPhoneNumber] = React.useState("");
   const [isLoggedIn,setIsLoggedIn] = React.useState(false);
   const [homeTodayScore, setHomeTodayScore] = React.useState(0);
-
+  const [tempCode, setTempCode] = React.useState(null);
    if (isFirstLaunch == true){
 return(
   <OnboardingScreen setFirstLaunch={setFirstLaunch}/>
@@ -27,6 +30,8 @@ return(
     return (
       <View>
         <TextInput 
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
           style={styles.input}  
           placeholderTextColor='#4251f5' 
           placeholder='Cell Phone'>          
@@ -34,12 +39,63 @@ return(
         <Button
           title='Send'
           style={styles.button}
-          onPress={()=>{
-            console.log('Button was pressed')
+          onPress={async()=>{
+            console.log(phoneNumber +' Button was pressed')
+
+            await fetch(
+              'https:dev.stedi.me/twofactorlogin/'+phoneNumber,
+              {
+                
+                method:'POST',
+                headers:{
+                  'content-type' : 'application/text'
+                }
+              }
+            )
           }}
-        />        
+        />
+        <TextInput 
+          value={tempCode}
+          onChangeText={setTempCode}
+          style={styles.input2}  
+          placeholderTextColor='#4251f5' 
+          placeholder='Enter Code'>          
+        </TextInput>
+        <Button
+          title='Send'
+          style={styles.button}
+          onPress={async()=>{
+            console.log(' Button 2 was pressed')
+
+            const loginResponse = await fetch(
+              'https:dev.stedi.me/twofactorlogin/',
+              {
+                
+                method:'POST',
+                headers:{
+                  'content-type' : 'application/text'
+                },
+                body:JSON.stringify({
+                  phoneNumber,
+                  oneTimePassword:tempCode
+                })
+              }
+            )
+            console.log("status", loginResponse.status)
+
+            if(loginResponse.status == 200){
+              const sessionToken = await loginResponse.text();
+              console.log('Session Token', sessionToken)
+              setIsLoggedIn(true);
+          }
+          // else{
+          //   Alert.alert('Warning', 'An invalid Code was entered.')
+          // }
+          }}
+        />            
       </View>
     )
+ 
   }
 }
  export default App;
@@ -59,12 +115,21 @@ return(
        marginTop:350
 
      },
+     
+     input2: {
+      height: 40,
+      margin: 12,
+      borderWidth: 1,
+      padding: 10,
+      marginTop:50
+
+    },
      margin:{
        marginTop:100
      },
      button: {
        alignItems: "center",
-       backgroundColor: "#DDDDDD",
+       backgroundColor: "#A640D5",
        padding: 10
      }    
  })
