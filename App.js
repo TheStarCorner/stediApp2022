@@ -8,10 +8,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-
-
-
 const AppStack = createNativeStackNavigator();
 
 const App = () =>{
